@@ -40,14 +40,13 @@ CursorRef SystemOSX::makeCursor(const Surface* surface,
   if (format.bitsPerPixel != 32)
     return nullptr;
 
-  const int w = scale*surface->width();
-  const int h = scale*surface->height();
-
-  if (4*w*h == 0)
-    return nullptr;
-
-  @autoreleasepool {
-    NSBitmapImageRep* bmp =
+  int w;
+  int h;
+  NSBitmapImageRep* bmp;
+  if (scale < 3 || scale > 7) {
+    w = scale*surface->width()-1;
+    h = scale*surface->height()-1;
+    bmp =
       [[NSBitmapImageRep alloc]
         initWithBitmapDataPlanes:nil
                       pixelsWide:w
@@ -60,6 +59,28 @@ CursorRef SystemOSX::makeCursor(const Surface* surface,
                     bitmapFormat:NSAlphaNonpremultipliedBitmapFormat
                      bytesPerRow:w*4
                     bitsPerPixel:32];
+  } else {
+    w = scale*surface->width()+1;
+    h = scale*surface->height()+1;
+    bmp =
+      [[NSBitmapImageRep alloc]
+        initWithBitmapDataPlanes:nil
+                      pixelsWide:w-1
+                      pixelsHigh:h-1
+                   bitsPerSample:8
+                 samplesPerPixel:4
+                        hasAlpha:YES
+                        isPlanar:NO
+                  colorSpaceName:NSDeviceRGBColorSpace
+                    bitmapFormat:NSAlphaNonpremultipliedBitmapFormat
+                     bytesPerRow:w*4
+                    bitsPerPixel:32];
+  }
+
+  // if (4*w*h == 0)
+  //   return nullptr;
+
+  @autoreleasepool {
     if (!bmp)
       return nullptr;
 
