@@ -42,54 +42,52 @@ CursorRef SystemOSX::makeCursor(const Surface* surface,
 
   int w;
   int h;
-  NSBitmapImageRep* bmp;
-  if (scale < 3 || scale > 7) {
-    w = scale*surface->width()-1;
-    h = scale*surface->height()-1;
-    bmp =
-      [[NSBitmapImageRep alloc]
-        initWithBitmapDataPlanes:nil
-                      pixelsWide:w
-                      pixelsHigh:h
-                   bitsPerSample:8
-                 samplesPerPixel:4
-                        hasAlpha:YES
-                        isPlanar:NO
-                  colorSpaceName:NSDeviceRGBColorSpace
-                    bitmapFormat:NSAlphaNonpremultipliedBitmapFormat
-                     bytesPerRow:w*4
-                    bitsPerPixel:32];
+  int pixelsWide;
+  int pixelsHigh;
+  int cursorScale = scale; 
+  if (cursorScale == 16)
+    cursorScale = 12;
+  if (cursorScale == 3)
+    cursorScale = 4;
+
+  if (cursorScale == 2) {
+    w = cursorScale*surface->width()-1;
+    h = cursorScale*surface->height()-1;
+    pixelsWide = w-1;
+    pixelsHigh = h-1;
   } else {
-    w = scale*surface->width()+1;
-    h = scale*surface->height()+1;
-    bmp =
-      [[NSBitmapImageRep alloc]
-        initWithBitmapDataPlanes:nil
-                      pixelsWide:w-1
-                      pixelsHigh:h-1
-                   bitsPerSample:8
-                 samplesPerPixel:4
-                        hasAlpha:YES
-                        isPlanar:NO
-                  colorSpaceName:NSDeviceRGBColorSpace
-                    bitmapFormat:NSAlphaNonpremultipliedBitmapFormat
-                     bytesPerRow:w*4
-                    bitsPerPixel:32];
+    w = cursorScale*surface->width()+1;
+    h = cursorScale*surface->height()+1;
+    pixelsWide = w-1;
+    pixelsHigh = h-1;
   }
 
   // if (4*w*h == 0)
   //   return nullptr;
 
   @autoreleasepool {
+    NSBitmapImageRep* bmp =
+      [[NSBitmapImageRep alloc]
+        initWithBitmapDataPlanes:nil
+                      pixelsWide:pixelsWide
+                      pixelsHigh:pixelsHigh
+                   bitsPerSample:8
+                 samplesPerPixel:4
+                        hasAlpha:YES
+                        isPlanar:NO
+                  colorSpaceName:NSDeviceRGBColorSpace
+                    bitmapFormat:NSAlphaNonpremultipliedBitmapFormat
+                     bytesPerRow:w*4
+                    bitsPerPixel:32];
     if (!bmp)
       return nullptr;
 
     uint32_t* dst = (uint32_t*)[bmp bitmapData];
     for (int y=0; y<h; ++y) {
-      const uint32_t* src = (const uint32_t*)surface->getData(0, y/scale);
+      const uint32_t* src = (const uint32_t*)surface->getData(0, y/cursorScale);
       for (int x=0, u=0; x<w; ++x, ++dst) {
         *dst = *src;
-        if (++u == scale) {
+        if (++u == cursorScale) {
           u = 0;
           ++src;
         }
@@ -104,8 +102,8 @@ CursorRef SystemOSX::makeCursor(const Surface* surface,
 
     NSCursor* nsCursor =
       [[NSCursor alloc] initWithImage:img
-                              hotSpot:NSMakePoint(scale*focus.x + scale/2,
-                                                  scale*focus.y + scale/2)];
+                              hotSpot:NSMakePoint(cursorScale*focus.x + cursorScale/2,
+                                                  cursorScale*focus.y + cursorScale/2)];
     if (!nsCursor)
       return nullptr;
 
