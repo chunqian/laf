@@ -40,26 +40,28 @@ CursorRef SystemOSX::makeCursor(const Surface* surface,
   if (format.bitsPerPixel != 32)
     return nullptr;
 
-  int w;
-  int h;
-  int pixelsWide;
-  int pixelsHigh;
-  int cursorScale = scale; 
-  if (cursorScale == 16)
-    cursorScale = 12;
+  int cursorScale = scale;
+  int w = cursorScale*surface->width();
+  int h = cursorScale*surface->height();
+  int pixelsWide = w;
+  int pixelsHigh = h;
   if (cursorScale == 3)
     cursorScale = 4;
+  if (cursorScale == 16)
+    cursorScale = 12;
 
-  if (cursorScale == 2) {
-    w = cursorScale*surface->width()-1;
-    h = cursorScale*surface->height()-1;
-    pixelsWide = w-1;
-    pixelsHigh = h-1;
-  } else {
-    w = cursorScale*surface->width()+1;
-    h = cursorScale*surface->height()+1;
-    pixelsWide = w-1;
-    pixelsHigh = h-1;
+  if (w*h != 1) {
+    if (cursorScale == 2) {
+      w = cursorScale*surface->width()-1;
+      h = cursorScale*surface->height()-1;
+      pixelsWide = w-1;
+      pixelsHigh = h-1;
+    } else {
+      w = cursorScale*surface->width()+1;
+      h = cursorScale*surface->height()+1;
+      pixelsWide = w-1;
+      pixelsHigh = h-1;
+    }
   }
 
   // if (4*w*h == 0)
